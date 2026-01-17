@@ -1,8 +1,8 @@
 # Tasks Schema Definition
 # 任务数据结构定义
-# Version: 2.1
+# Version: 2.2
 
-version: "2.1"
+version: "2.2"
 
 # 角色配置文件引用
 roles_config: "../roles.yaml"
@@ -21,6 +21,7 @@ status_enum:
   - pending      # 待开始
   - in_progress  # 进行中
   - completed    # 已完成
+  - audited      # 已审计
   - blocked      # 被阻塞
 
 # 优先级枚举
@@ -80,11 +81,20 @@ done_when_types:
     description: "检查文件内容是否匹配模式"
     params:
       - file: string    # 文件路径
-      - pattern: string # 正则表达式或关键字
-    example:
-      type: content_match
-      file: "src/api/client.ts"
-      pattern: "baseURL.*import.meta.env"
+      - pattern: string # 匹配模式 (默认字面匹配，re: 前缀启用正则)
+    notes: |
+      模式语法:
+        - 默认为字面字符串匹配: "app.use(router)"
+        - 添加 "re:" 前缀启用正则: "re:app\\.use\\(.*\\)"
+    examples:
+      - description: "字面匹配 (推荐)"
+        type: content_match
+        file: "src/main.ts"
+        pattern: "app.use(router)"
+      - description: "正则匹配 (复杂场景)"
+        type: content_match
+        file: "src/api/client.ts"
+        pattern: "re:baseURL.*import\\.meta\\.env"
 
   shell_check:
     description: "执行命令检查退出码"
@@ -109,7 +119,7 @@ task_schema:
   id:
     type: string
     required: true
-    description: "任务 ID (唯一，格式: 模块-版本.序号)"
+    description: "任务 ID (唯一，格式: 模块-版本.序号 或 模块-版本.序号-后缀)"
 
   name:
     type: string
@@ -119,7 +129,7 @@ task_schema:
   status:
     type: enum
     required: true
-    values: [pending, in_progress, completed, blocked]
+    values: [pending, in_progress, completed, audited, blocked]
     default: pending
 
   priority:
@@ -151,9 +161,26 @@ task_schema:
     description: "是否需要审计"
 
   audit_by:
+    type: enum
+    required: false
+    values: [claude, gemini]
+    description: "审计者"
+
+  audit_result:
+    type: enum
+    required: false
+    values: [passed, passed_with_comments, failed, skipped]
+    description: "审计结果 (存在即代表已审计)"
+
+  audit_grade:
     type: string
     required: false
-    description: "审计者"
+    description: "审计评级 (A+, A, B+, B, C...)"
+
+  audited_at:
+    type: date
+    required: false
+    format: "YYYY-MM-DD"
 
   spec:
     type: string

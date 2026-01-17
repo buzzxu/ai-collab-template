@@ -1,0 +1,176 @@
+# Tasks Schema Definition
+# 任务数据结构定义
+# Version: 2.1
+
+version: "2.1"
+
+# 角色配置文件引用
+roles_config: "../roles.yaml"
+
+# 模块映射 (ID 前缀 -> 文件名)
+# 根据项目需求修改
+module_mapping:
+  FE: frontend.yaml      # 前端任务
+  BE: backend.yaml       # 后端任务
+  DOC: docs.yaml         # 文档任务
+  # MOBILE: mobile.yaml  # 移动端任务
+  # INFRA: infra.yaml    # 基础设施任务
+
+# 任务状态枚举
+status_enum:
+  - pending      # 待开始
+  - in_progress  # 进行中
+  - completed    # 已完成
+  - blocked      # 被阻塞
+
+# 优先级枚举
+priority_enum:
+  - P0  # 必须完成 (阻塞发布)
+  - P1  # 应该完成 (重要功能)
+  - P2  # 可以延后 (优化项)
+
+# AI 角色枚举
+ai_enum:
+  - claude   # Claude (Opus/Sonnet)
+  - gemini   # Gemini Pro
+  - codex    # Codex CLI
+  - cursor   # Cursor IDE
+
+# 模块级默认配置结构
+defaults_schema:
+  implement_by:
+    type: string
+    description: "默认实现者 (可被任务级 assignee 覆盖)"
+    values: [claude, gemini, codex, cursor]
+
+  audit_by:
+    type: string
+    description: "默认审计者 (可被任务级 audit_by 覆盖)"
+    values: [claude, gemini, codex, null]
+
+  requires_audit:
+    type: boolean
+    description: "默认是否需要审计"
+    default: true
+
+# 配置优先级说明
+# 命令行参数 > 任务级 > 模块级 defaults > 全局 roles.yaml workflows
+
+# 验收条件类型
+done_when_types:
+  file_exists:
+    description: "检查文件是否存在"
+    params:
+      - path: string  # 相对于模块仓库的路径
+    example:
+      type: file_exists
+      path: "src/stores/auth.ts"
+
+  export_exists:
+    description: "检查文件是否导出指定符号"
+    params:
+      - file: string   # 文件路径
+      - export: string # 导出的符号名
+    example:
+      type: export_exists
+      file: "src/stores/auth.ts"
+      export: "useAuthStore"
+
+  content_match:
+    description: "检查文件内容是否匹配模式"
+    params:
+      - file: string    # 文件路径
+      - pattern: string # 正则表达式或关键字
+    example:
+      type: content_match
+      file: "src/api/client.ts"
+      pattern: "baseURL.*import.meta.env"
+
+  shell_check:
+    description: "执行命令检查退出码"
+    params:
+      - command: string # Shell 命令
+      - expect: string  # 期望结果 (exit_code:0)
+    example:
+      type: shell_check
+      command: "pnpm type-check"
+      expect: "exit_code:0"
+
+  test_pass:
+    description: "执行测试命令"
+    params:
+      - command: string # 测试命令
+    example:
+      type: test_pass
+      command: "go test ./internal/auth/..."
+
+# 任务结构定义
+task_schema:
+  id:
+    type: string
+    required: true
+    description: "任务 ID (唯一，格式: 模块-版本.序号)"
+
+  name:
+    type: string
+    required: true
+    description: "任务名称"
+
+  status:
+    type: enum
+    required: true
+    values: [pending, in_progress, completed, blocked]
+    default: pending
+
+  priority:
+    type: enum
+    required: true
+    values: [P0, P1, P2]
+
+  assignee:
+    type: string
+    required: false
+    description: "当前负责的 AI (claude/gemini/codex)"
+
+  depends_on:
+    type: array
+    required: false
+    items: string
+    description: "依赖的任务 ID 列表"
+
+  done_when:
+    type: array
+    required: true
+    items: object
+    description: "验收条件列表"
+
+  requires_audit:
+    type: boolean
+    required: false
+    default: true
+    description: "是否需要审计"
+
+  audit_by:
+    type: string
+    required: false
+    description: "审计者"
+
+  spec:
+    type: string
+    required: false
+    description: "关联的 spec.json 路径 (用于 Codex)"
+
+  created_at:
+    type: date
+    required: true
+    format: "YYYY-MM-DD"
+
+  completed_at:
+    type: date
+    required: false
+    format: "YYYY-MM-DD"
+
+  notes:
+    type: string
+    required: false
+    description: "备注"

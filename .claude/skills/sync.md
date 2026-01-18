@@ -47,6 +47,26 @@ Total:    {completed}/{total} ({percent}%)
 1. 重新执行 `done_when` 检查
 2. 记录通过/失败状态
 
+### Step 3.5: 验证 session.md 一致性
+
+> **重要**: 检查 `.context/session.md` 与任务文件的一致性
+
+**检查项**:
+1. session.md 中提到的 "进行中" 任务是否确实是 `status: in_progress`
+2. session.md 中提到的 "待实现" 任务是否确实是 `status: pending`
+3. session.md 中的进度数据是否与实际统计匹配
+
+**如发现不一致**:
+```
+⚠️ session.md 与任务状态不一致:
+
+| 问题 | session.md 声称 | 实际状态 |
+|------|-----------------|----------|
+| {task-id} | 进行中 | completed |
+
+建议: 运行 `/handoff` 重新生成交接文档
+```
+
 ### Step 4: 生成报告
 
 ```markdown
@@ -83,6 +103,7 @@ Total:    {completed}/{total} ({percent}%)
 
 ### 一致性检查
 
+**任务验收检查**:
 {如果所有 completed 任务验证通过}
 ✅ 所有已完成任务验证通过
 
@@ -92,6 +113,21 @@ Total:    {completed}/{total} ({percent}%)
 | 任务 | 问题 |
 |------|------|
 | {id} | {失败的检查项} |
+
+建议: 运行 `/task-reopen {id}` 重新开启
+
+**session.md 一致性检查**:
+{如果 session.md 与任务状态一致}
+✅ session.md 与任务状态一致
+
+{如果有不一致}
+⚠️ session.md 过时:
+
+| 文件声称 | 实际状态 |
+|----------|----------|
+| {任务} {声称状态} | {实际状态} |
+
+建议: 运行 `/handoff` 重新生成交接文档
 
 ---
 

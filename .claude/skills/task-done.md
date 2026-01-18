@@ -99,7 +99,29 @@ final_audit_by =
 - 如为 true，确保 `final_audit_by != assignee`
 - 如冲突，从 `audit_rules.matrix[assignee]` 选择第一个可用审计者
 
-### Step 6: 触发审计 (如需要)
+### Step 6: 强制同步验证 (关键)
+
+> **重要**: 更新 session.md 前必须重新读取任务文件！
+
+**必须执行**:
+```bash
+# 重新读取任务文件确认最新状态
+cat project/tasks/{module}.yaml
+```
+
+**验证清单**:
+- [ ] 已重新读取任务文件
+- [ ] 确认当前任务状态为 completed
+- [ ] 确认不存在其他 "进行中" 状态的假设
+
+**禁止行为**:
+- ❌ 假设下一个任务是什么而不验证
+- ❌ 在 session.md 中写入未验证的任务状态
+- ❌ 根据任务 ID 顺序推断下一步
+
+---
+
+### Step 7: 触发审计 (如需要)
 
 如果需要审计：
 
@@ -135,7 +157,7 @@ final_audit_by =
 
 3. 提示用户需要审计
 
-### Step 7: 输出结果
+### Step 8: 输出结果
 
 ```
 ## 任务完成: {id} - {name}
